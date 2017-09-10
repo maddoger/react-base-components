@@ -20,7 +20,7 @@ class Radio extends PureComponent {
     const value = e.currentTarget.value
     const checked = e.currentTarget.checked
     if (onChange) {
-      onChange(e, checked, value)
+      onChange(checked, value, e)
     }
   }
 

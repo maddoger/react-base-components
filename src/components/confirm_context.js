@@ -1,7 +1,9 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import { translate } from 'react-i18next'
+import cn from 'classnames'
 import { mergeAll } from 'ramda'
+
+import { t } from '../i18n'
 
 import Modal from './modal'
 import ButtonToolbar from './button_toolbar'
@@ -9,23 +11,34 @@ import Button from './button'
 
 class ConfirmContext extends PureComponent {
   static propTypes = {
-    t: PropTypes.func.isRequired,
     children: PropTypes.node.isRequired,
   }
 
   static childContextTypes = {
     confirm: PropTypes.func,
+    alert: PropTypes.func,
   }
 
   state = { isOpen: false }
 
   getChildContext() {
-    return { confirm: this.confirm }
+    return { confirm: this.confirm, alert: this.alert }
   }
 
   defaultState = {
-    cancelTitle: this.props.t('Cancel'),
-    successTitle: this.props.t('Confirm'),
+    className: null,
+    cancelTitle: t('Cancel'),
+    successTitle: t('Confirm'),
+    successPreset: 'primary',
+    title: t('Are you sure?'),
+    message: null,
+  }
+
+  alertDefaultState = {
+    className: 'alert',
+    cancelTitle: null,
+    successTitle: t('Ok, got it'),
+    successPreset: 'primary-outline',
   }
 
   cancel = () => { this.setState(() => ({ isOpen: false }), this.state.reject) }
@@ -35,15 +48,21 @@ class ConfirmContext extends PureComponent {
     new Promise((resolve, reject) =>
       this.setState(mergeAll([this.defaultState, opts, { isOpen: true, resolve, reject }])))
 
+  alert = opts =>
+    new Promise((resolve, reject) =>
+      this.setState(mergeAll([this.defaultState, this.alertDefaultState, opts, { isOpen: true, resolve, reject }])))
+
   render() {
+    const { className, isOpen, title, message, successTitle, successPreset, cancelTitle } = this.state
     return (
       <div>
-        <Modal className="confirm-modal" show={this.state.isOpen} onClose={this.cancel}>
-          <div className="confirm-modal_question">{this.state.message}</div>
+        <Modal className={cn('confirm-modal', className)} show={isOpen} onClose={this.cancel} closeable={false}>
+          {title && <div className="confirm-modal_title">{title}</div>}
+          {message && <div className="confirm-modal_question">{message}</div>}
           <div className="confirm-modal_actions">
             <ButtonToolbar block equal className="confirm-modal_toolbar">
-              <Button preset="primary-outline" block onClick={this.cancel}>{this.state.cancelTitle}</Button>
-              <Button preset="primary" block onClick={this.success}>{this.state.successTitle}</Button>
+              {cancelTitle && <Button preset="primary-outline" block onClick={this.cancel}>{cancelTitle}</Button>}
+              {successTitle && <Button preset={successPreset} block onClick={this.success}>{successTitle}</Button>}
             </ButtonToolbar>
           </div>
         </Modal>
@@ -53,4 +72,4 @@ class ConfirmContext extends PureComponent {
   }
 }
 
-export default translate('app')(ConfirmContext)
+export default ConfirmContext

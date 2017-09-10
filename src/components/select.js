@@ -1,16 +1,18 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
-import { find, propEq } from 'ramda'
+import ReactSelect from 'react-select'
+import { filter, merge, pluck } from 'ramda'
+
+import { t } from '../i18n'
 import Icon from './icon'
 
 class Select extends PureComponent {
   static propTypes = {
     id: PropTypes.string,
     className: PropTypes.string,
-    children: PropTypes.node,
-    items: PropTypes.array,
-    name: PropTypes.string.isRequired,
+    options: PropTypes.array,
+    name: PropTypes.string,
     defaultValue: PropTypes.any,
     value: PropTypes.any,
     onChange: PropTypes.func,
@@ -19,6 +21,18 @@ class Select extends PureComponent {
     hasError: PropTypes.bool,
     size: PropTypes.string,
     renderOption: PropTypes.func,
+    placeholder: PropTypes.string,
+    multiple: PropTypes.bool,
+    clearable: PropTypes.bool,
+    searchable: PropTypes.bool,
+    loading: PropTypes.bool,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    inputRef: PropTypes.func,
+  }
+
+  static defaultProps = {
+    clearable: false,
   }
 
   constructor(props) {
@@ -28,60 +42,65 @@ class Select extends PureComponent {
     }
   }
 
-  handleChange = (e) => {
-    const { onChange, items } = this.props
-    const value = e.currentTarget.value
-    const item = items.indexOf(value) > -1 ? value : find(propEq('value', value))(items)
+  handleChange = (value) => {
+    const { onChange, multiple } = this.props
     if (onChange) {
-      onChange(e, value, item)
+      if (multiple) {
+        onChange(pluck('value', value))
+      } else {
+        onChange(value ? value.value : '')
+      }
     }
   }
 
-  handleFocus = () => {
+  handleFocus = (e) => {
     this.setState({
       hasFocus: true,
     })
+    const { onFocus } = this.props
+    if (onFocus) {
+      onFocus(e)
+    }
   }
 
-  handleBlur = () => {
+  handleBlur = (e) => {
     this.setState({
       hasFocus: false,
     })
-  }
-
-  renderOption(item, key) {
-    if (typeof item === 'object') {
-      return <option key={item.value} value={item.value}>{item.label}</option>
+    const { onBlur } = this.props
+    if (onBlur) {
+      onBlur(e)
     }
-    return <option key={key} value={item}>{item}</option>
   }
 
-  renderOptions() {
-    const { items, renderOption } = this.props
-    return items.map(renderOption || this.renderOption)
-  }
+  renderArrow = ({ isOpen }) => (
+    <Icon icon="chevron_select" className={cn('Select-arrow-icon', isOpen && '-open')} />
+  )
 
   render() {
     const {
       id,
       className,
-      name,
-      children,
-      value,
-      defaultValue,
       disabled,
       required,
       hasError,
       size,
+      multiple,
+      options,
+      inputRef,
+      ...rest
     } = this.props
 
     const {
       hasFocus,
     } = this.state
 
-    const containerProps = {
+    const searchable = this.props.searchable !== undefined ? Select.propTypes.searchable :
+      (options && options.length > 10)
+
+    const selectProps = merge(rest, {
+      id,
       className: cn({
-        select: true,
         '-disabled': disabled,
         '-required': required,
         '-has-error': hasError,
@@ -89,28 +108,32 @@ class Select extends PureComponent {
         [`-size-${size}`]: !!size,
         [className]: !!className,
       }),
-    }
-
-    const selectProps = {
-      id,
-      className: cn('select_select', className),
-      name,
-      value,
-      defaultValue,
+      arrowRenderer: this.renderArrow,
       onChange: this.handleChange,
       onFocus: this.handleFocus,
       onBlur: this.handleBlur,
-      children: children || this.renderOptions(),
+      options,
+      multi: multiple,
+      searchable,
+      clearValueText: t('Clear'),
+      clearAllText: t('Clear all'),
+      noResultsText: t('No results found'),
+      searchPromptText: t('Type to search'),
+      addLabelText: t('Add {label}?'),
+      placeholder: t('Select...'),
+      loadingPlaceholder: t('Loading...'),
+      ref: inputRef,
+    })
+
+    const { value } = this.props
+    if (multiple && value) {
+      selectProps.value = filter(item => (value.indexOf(item.value) > -1), options)
     }
+
     return (
-      <div {...containerProps}>
-        <select {...selectProps} />
-        <Icon icon="chevron_select" className="select_chevron" />
-      </div>
+      <ReactSelect {...selectProps} />
     )
   }
 }
-
-Select.Option = props => <option {...props} />
 
 export default Select

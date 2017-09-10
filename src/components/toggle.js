@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
+import { merge } from 'ramda'
+import Loader from './loader'
 
 class Toggle extends PureComponent {
   static propTypes = {
@@ -12,6 +14,7 @@ class Toggle extends PureComponent {
     type: PropTypes.string,
     onChange: PropTypes.func,
     hasError: PropTypes.bool,
+    loading: PropTypes.bool,
   }
 
   static defaultProps = {
@@ -23,19 +26,29 @@ class Toggle extends PureComponent {
     const value = e.currentTarget.value
     const checked = e.currentTarget.checked
     if (onChange) {
-      onChange(e, checked, value)
+      onChange(checked, value, e)
     }
   }
 
   render() {
-    const { className, id, checked, hasError, ...inputProps } = this.props
-    delete inputProps.onChange
+    const { className, id, checked, hasError, loading, ...inputProps } = this.props
+    const classes = cn('toggle', {
+      '-checked': checked,
+      '-has-error': hasError,
+      '-loading': loading,
+    }, className)
+    const props = merge(inputProps, {
+      id,
+      checked,
+      onChange: this.handleChange,
+    })
     return (
-      <label className={cn('toggle', { '-checked': checked, '-has-error': hasError }, className)} htmlFor={id}>
-        <input className="toggle_input" id={id} checked={checked} onChange={this.handleChange} {...inputProps} />
-        <div className="toggle_track">
-          <div className="toggle_handle" />
-        </div>
+      <label className={classes} htmlFor={id}>
+        <input className="toggle_input" {...props} />
+        <span className="toggle_track">
+          <span className="toggle_handle" />
+        </span>
+        {loading && <Loader className="toggle_loader" />}
       </label>
     )
   }

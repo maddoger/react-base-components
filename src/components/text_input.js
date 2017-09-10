@@ -1,7 +1,9 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
-import { merge } from 'ramda'
+import { merge, propOr, omit } from 'ramda'
+import Textarea from 'react-textarea-autosize'
+import MaskedInput from './masked_input'
 
 class TextInput extends PureComponent {
   static propTypes = {
@@ -9,8 +11,8 @@ class TextInput extends PureComponent {
     className: PropTypes.string,
     inputClassName: PropTypes.string,
     type: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string,
+    name: PropTypes.string,
+    value: PropTypes.any,
     defaultValue: PropTypes.string,
     placeholder: PropTypes.string,
     disabled: PropTypes.bool,
@@ -18,10 +20,16 @@ class TextInput extends PureComponent {
     hasError: PropTypes.bool,
     onChange: PropTypes.func,
     onPressEnter: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    onKeyDown: PropTypes.func,
     prefix: PropTypes.node,
     affix: PropTypes.node,
     size: PropTypes.string,
-    rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    multiline: PropTypes.bool,
+    inputRef: PropTypes.func,
+    autoFocus: PropTypes.bool,
+    mask: PropTypes.any,
   }
 
   static defaultProps = {
@@ -35,53 +43,69 @@ class TextInput extends PureComponent {
     }
   }
 
-  setRef = (ref) => {
-    this.input = ref
-  }
-
-  handleChange = (e) => {
-    const { onChange } = this.props
-    const value = e.currentTarget.value
-    if (onChange) {
-      onChange(e, value)
+  componentDidMount() {
+    if (this.props.autoFocus) {
+      this.focus()
     }
   }
 
-  handleFocus = () => {
+  onChange = (e) => {
+    const { onChange } = this.props
+    const value = e.currentTarget.value
+    if (onChange) {
+      onChange(value, e)
+    }
+  }
+
+  onFocus = (e) => {
     this.setState({
       hasFocus: true,
     })
+    const { onFocus } = this.props
+    if (onFocus) {
+      onFocus(e)
+    }
   }
 
-  handleBlur = () => {
+  onBlur = (e) => {
     this.setState({
       hasFocus: false,
     })
+    const { onBlur } = this.props
+    if (onBlur) {
+      onBlur(e)
+    }
   }
 
-  handleKeyDown = (e) => {
+  onKeyDown = (e) => {
     const { onPressEnter } = this.props
     if (onPressEnter && e.keyCode === 13) {
       onPressEnter(e)
     }
+    const { onKeyDown } = this.props
+    if (onKeyDown) {
+      onKeyDown(e)
+    }
+  }
+
+  setInputRef = (ref) => {
+    this.inputRef = ref
+    const { inputRef } = this.props
+    if (inputRef) {
+      inputRef(ref)
+    }
   }
 
   focus() {
-    if (this.input) {
-      this.input.focus()
+    if (this.inputRef) {
+      this.inputRef.focus()
     }
   }
 
   render() {
     const {
-      id,
       className,
       inputClassName,
-      type,
-      name,
-      value,
-      defaultValue,
-      placeholder,
       disabled,
       required,
       hasError,
@@ -89,8 +113,8 @@ class TextInput extends PureComponent {
       affix,
       onPressEnter,
       size,
-      rows,
-      ...rest
+      multiline,
+      mask,
     } = this.props
     const {
       hasFocus,
@@ -107,29 +131,36 @@ class TextInput extends PureComponent {
         [className]: !!className,
       }),
     }
-    const inputProps = merge(rest, {
-      id,
-      className: cn({
-        'text-input_input': true,
-        [inputClassName]: !!inputClassName,
-      }),
-      defaultValue,
-      name,
-      value,
-      type,
-      placeholder,
-      disabled,
-      onChange: this.handleChange,
-      onFocus: this.handleFocus,
-      onBlur: this.handleBlur,
-      onKeyDown: onPressEnter ? this.handleKeyDown : null,
-      ref: this.setRef,
-    })
+    const inputProps = merge(
+      omit(
+        ['className', 'inputClassName', 'inputRef', 'hasError', 'multiline', 'ref',
+          'prefix', 'affix', 'size', 'autoFocus', 'onChange', 'onFocus', 'onBlur', 'onKeyDown', 'onPressEnter'],
+        this.props
+      ),
+      {
+        className: cn({
+          'text-input_input': true,
+          [inputClassName]: !!inputClassName,
+        }),
+        disabled,
+        onChange: this.onChange,
+        onFocus: this.onFocus,
+        onBlur: this.onBlur,
+        onKeyDown: this.onKeyDown,
+        ref: this.setInputRef,
+      }
+    )
     let InputElement = 'input'
-    if (rows) {
-      InputElement = 'textarea'
-      inputProps.rows = rows
+    if (mask) {
+      InputElement = MaskedInput
+      inputProps.guide = propOr(true, 'guide', inputProps)
+      delete inputProps.ref
+      inputProps.inputRef = this.setInputRef
+    } else if (multiline) {
+      InputElement = Textarea
       delete inputProps.type
+      delete inputProps.ref
+      inputProps.inputRef = this.setInputRef
     }
     return (
       <div {...containerProps}>

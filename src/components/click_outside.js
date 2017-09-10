@@ -46,11 +46,12 @@ class ClickOutside extends PureComponent {
     ignoreClass: PropTypes.string,
     onClickOutside: PropTypes.func.isRequired,
     active: PropTypes.bool,
+    containerRef: PropTypes.func,
   }
 
   static defaultProps = {
     element: 'div',
-    ignoreClass: 'ignore-click-outside',
+    // ignoreClass: 'ignore-click-outside',
     active: true,
   }
 
@@ -77,17 +78,21 @@ class ClickOutside extends PureComponent {
   }
 
   setRef = (ref) => {
-    this.wrapperRef = ref
+    const { containerRef } = this.props
+    this.containerRef = ref
+    if (containerRef) {
+      containerRef(ref)
+    }
   }
 
   handleClickOutside = (event) => {
-    if (this.wrapperRef) {
-      const { ignoreClass, onClickOutside } = this.props
+    const { ignoreClass, onClickOutside } = this.props
+    if (this.containerRef && onClickOutside) {
       if (ignoreClass) {
-        if (findHighestNode(event.target, this.wrapperRef, ignoreClass) !== document) {
+        if (findHighestNode(event.target, this.containerRef, ignoreClass) !== document) {
           return
         }
-      } else if (!this.wrapperRef.contains(event.target)) {
+      } else if (this.containerRef.contains(event.target)) {
         return
       }
       onClickOutside(event)
@@ -103,9 +108,8 @@ class ClickOutside extends PureComponent {
   }
 
   render() {
-    const { element } = this.props
-    const props = omit(['element', 'ignoreClass', 'onClickOutside', 'active'], this.props)
-    const Element = element
+    const props = omit(['element', 'ignoreClass', 'onClickOutside', 'active', 'containerRef'], this.props)
+    const Element = this.props.element
     return <Element ref={this.setRef} {...props} />
   }
 }
