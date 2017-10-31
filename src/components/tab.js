@@ -6,6 +6,9 @@ class Tab extends Component {
   static propTypes = {
     className: PropTypes.string,
     children: PropTypes.node,
+    eventKey: PropTypes.string,
+    title: PropTypes.string,
+    buttonProps: PropTypes.object,
   }
 
   render() {

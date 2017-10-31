@@ -21,10 +21,7 @@ class TabButton extends Component {
 
   render() {
     const { className, children, active, eventKey, onClick, ...rest } = this.props
-    const classes = cn({
-      'tab-button': true,
-      className: !!className,
-    })
+    const classes = cn('tab-button', className)
     return (
       <ButtonBase className={classes} active={active} activeClassName="-active" onClick={this.handleOnClick} {...rest}>
         {children}

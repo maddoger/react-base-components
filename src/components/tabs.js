@@ -8,10 +8,14 @@ import Tab from './tab'
 class Tabs extends Component {
   static propTypes = {
     className: PropTypes.string,
+    navClassName: PropTypes.string,
+    contentClassName: PropTypes.string,
+    paneClassName: PropTypes.string,
     children: PropTypes.node.isRequired,
     defaultActiveKey: PropTypes.any,
     activeKey: PropTypes.any,
     onSelect: PropTypes.func,
+    flex: PropTypes.bool,
   }
 
   constructor(props) {
@@ -42,7 +46,7 @@ class Tabs extends Component {
   }
 
   render() {
-    const { className, children } = this.props
+    const { className, navClassName, contentClassName, paneClassName, children, flex } = this.props
     const { activeKey } = this.state
 
     const navItems = React.Children.map(children, item => (
@@ -50,6 +54,7 @@ class Tabs extends Component {
         eventKey={item.props.eventKey}
         onClick={this.handleSelect}
         active={item.props.eventKey === activeKey}
+        {...item.props.buttonProps}
       >
         {item.props.title}
       </TabButton>
@@ -57,13 +62,13 @@ class Tabs extends Component {
 
     const content = React.Children.map(children, item => (
       item.props.eventKey === activeKey ?
-        <div className="tabs_pane">{item.props.children}</div> : null
+        <div className={cn('tabs_pane', paneClassName, item.props.className)}>{item.props.children}</div> : null
     ))
 
     return (
-      <div className={cn('tabs', className)}>
-        <TabNav className="tabs_nav">{navItems}</TabNav>
-        <div className="tabs_content">
+      <div className={cn('tabs', { '-flex': flex }, className)}>
+        <TabNav className={cn('tabs_nav', navClassName)}>{navItems}</TabNav>
+        <div className={cn('tabs_content', contentClassName)}>
           {content}
         </div>
       </div>

@@ -9,7 +9,7 @@ class FormGroup extends PureComponent {
     label: PropTypes.node,
     labelFor: PropTypes.string,
     labelClassName: PropTypes.string,
-    error: PropTypes.oneOfType([PropTypes.array, PropTypes.node]),
+    error: PropTypes.oneOfType([PropTypes.array, PropTypes.node, PropTypes.bool]),
     errorClassName: PropTypes.string,
     hint: PropTypes.node,
     hintClassName: PropTypes.string,

@@ -10,6 +10,7 @@ class DropdownLink extends PureComponent {
     children: PropTypes.node,
     onClick: PropTypes.func,
     closeOnClick: PropTypes.bool,
+    preset: PropTypes.string,
   }
 
   static defaultProps = {
@@ -22,8 +23,8 @@ class DropdownLink extends PureComponent {
 
   onClick = (e) => {
     const { onClick, closeOnClick } = this.props
-    if (closeOnClick) {
-      this.context.dropdown.hide()
+    if (closeOnClick && this.context.dropdown) {
+      this.context.dropdown.close()
     }
     if (onClick) {
       onClick(e)
@@ -31,9 +32,11 @@ class DropdownLink extends PureComponent {
   }
 
   render() {
-    const props = omit(['className', 'onClick', 'closeOnClick'], this.props)
+    const { preset, className } = this.props
+    const props = omit(['className', 'onClick', 'closeOnClick', 'preset'], this.props)
+    props.className = cn('dropdown_link', { [`-preset-${preset}`]: preset }, className)
     return (
-      <ButtonBase className={cn('dropdown_link', this.props.className)} {...props} onClick={this.onClick} />
+      <ButtonBase tabIndex={0} {...props} onClick={this.onClick} />
     )
   }
 }

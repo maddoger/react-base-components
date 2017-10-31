@@ -1,37 +1,39 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import { omit, equals } from 'ramda'
+import { equals, omit } from 'ramda'
+import ResizeObserver from 'resize-observer-polyfill'
 
-// This element provides his client position to onPositionChange callback
 class FixedContainer extends PureComponent {
   static propTypes = {
     className: PropTypes.string,
     children: PropTypes.node,
     element: PropTypes.string,
+    onChange: PropTypes.func,
     containerRef: PropTypes.func,
-    onPositionChange: PropTypes.func.isRequired,
-    onResize: PropTypes.func,
     active: PropTypes.bool,
+    listenScroll: PropTypes.bool,
   }
 
   static defaultProps = {
     active: true,
-    element: 'div',
+    listenScroll: true,
+  }
+
+  componentWillMount() {
+    this.resizeObserver = new ResizeObserver(this.measure)
   }
 
   componentDidMount() {
-    if (this.props.active) {
-      this.addListeners()
-      this.onEvent()
-    }
+    this.addListeners()
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.active && !this.props.active) {
-      this.addListeners()
-      this.onEvent()
-    } else if (!nextProps.active && this.props.active) {
-      this.removeListeners()
+  componentWillUpdate(nextProps) {
+    if (nextProps.active !== this.props.active) {
+      if (nextProps.active) {
+        this.addListeners()
+      } else {
+        this.removeListeners()
+      }
     }
   }
 
@@ -40,64 +42,77 @@ class FixedContainer extends PureComponent {
   }
 
   onEvent = (e) => {
-    const { containerRef, lastPosition = {} } = this
-    const parentRect = containerRef.getBoundingClientRect()
-    const position = {
-      left: parentRect.left,
-      top: parentRect.top,
-      rectRight: parentRect.right,
-      rectBottom: parentRect.bottom,
-      right: window.innerWidth - parentRect.right,
-      bottom: window.innerHeight - parentRect.bottom,
-      width: parentRect.width,
-      height: parentRect.height,
-    }
-    if (!equals(position, lastPosition)) {
-      const { onPositionChange, onResize } = this.props
-      onPositionChange(position)
-      if (onResize && e && (e.type === 'resize')) {
-        onResize(e)
+    this.measure(e && (e.type !== 'scroll'))
+  }
+
+  setRef = (node) => {
+    if (this.resizeObserver) {
+      if (node && this.props.active) {
+        // observe
+        this.resizeObserver.observe(node)
+      } else {
+        this.resizeObserver.disconnect()
       }
     }
-    if (e) {
-      this.lastPosition = position
+    this.node = node
+
+    if (this.props.containerRef) {
+      this.props.containerRef(node)
     }
   }
 
-  setContainerRef = (ref) => {
-    const { containerRef } = this.props
-    this.containerRef = ref
-    if (containerRef) {
-      containerRef(ref)
+  measure = (force) => {
+    if (this.node) {
+      const rect = this.node.getBoundingClientRect()
+      const contentRect = {
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        fromRight: window.innerWidth - rect.right,
+        fromBottom: window.innerHeight - rect.bottom,
+      }
+      if (force || !equals(contentRect, this.contentRect)) {
+        this.contentRect = contentRect
+        if (this.props.onChange) {
+          this.props.onChange(contentRect)
+        }
+      }
     }
   }
 
   addListeners() {
-    this.events.forEach(event => window.addEventListener(event, this.onEvent, event === 'scroll'))
+    this.events.forEach((event) => {
+      if (event !== 'scroll' || this.props.listenScroll) {
+        window.addEventListener(event, this.onEvent, event === 'scroll')
+      }
+    })
+    if (this.node && this.resizeObserver) {
+      this.resizeObserver.observe(this.node)
+    }
   }
 
   removeListeners() {
     this.events.forEach(event => window.removeEventListener(event, this.onEvent, event === 'scroll'))
-  }
-
-  updatePosition() {
-    this.onEvent()
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+    }
   }
 
   events = [
     'resize',
     'scroll',
-    'touchstart',
-    'touchmove',
-    'touchend',
     'pageshow',
     'load',
   ]
 
   render() {
-    const props = omit(['element', 'containerRef', 'onPositionChange', 'onResize', 'active'], this.props)
+    const props = omit(['element', 'containerRef', 'onChange', 'onResize', 'active', 'listenScroll'], this.props)
+    const Element = this.props.element || 'div'
     return (
-      <div ref={this.setContainerRef} {...props} />
+      <Element ref={this.setRef} {...props} />
     )
   }
 }

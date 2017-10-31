@@ -21,8 +21,8 @@ class DropdownItem extends PureComponent {
 
   onClick = (e) => {
     const { onClick, closeOnClick } = this.props
-    if (closeOnClick) {
-      this.context.dropdown.hide()
+    if (closeOnClick && this.context.dropdown) {
+      this.context.dropdown.close()
     }
     if (onClick) {
       onClick(e)

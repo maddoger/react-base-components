@@ -58,7 +58,7 @@ class MaskedInput extends Component {
   initTextMask() {
     if (this.inputRef) {
       const value = this.props.value || this.props.defaultValue
-      const options = pick(['mask', 'guide', 'pipe', 'placeholderChar', 'keepChagPositions', 'showMask'], this.props)
+      const options = pick(['mask', 'guide', 'pipe', 'placeholderChar', 'keepCharPositions', 'showMask'], this.props)
 
       this.textMaskInputElement = createTextMaskInputElement({
         inputElement: this.inputRef,

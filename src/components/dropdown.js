@@ -10,8 +10,8 @@ class Dropdown extends PureComponent {
     className: PropTypes.string,
     children: PropTypes.node,
     open: PropTypes.bool,
-    onShow: PropTypes.func,
-    onHide: PropTypes.func,
+    onOpen: PropTypes.func,
+    onClose: PropTypes.func,
     containerRef: PropTypes.func,
     style: PropTypes.object,
   }
@@ -34,8 +34,8 @@ class Dropdown extends PureComponent {
 
   getChildContext() {
     const dropdown = {
-      show: this.show,
-      hide: this.hide,
+      open: this.open,
+      close: this.close,
       isOpen: this.isOpen(),
       toggle: this.toggle,
     }
@@ -47,9 +47,9 @@ class Dropdown extends PureComponent {
   componentWillReceiveProps(nextProps) {
     if (nextProps.open !== this.props.open) {
       if (nextProps.open) {
-        this.show()
+        this.open()
       } else {
-        this.hide()
+        this.close()
       }
     }
   }
@@ -57,7 +57,7 @@ class Dropdown extends PureComponent {
   onClickOutside = () => {
     const { open } = this.state
     if (open) {
-      this.hide()
+      this.close()
     }
   }
 
@@ -67,26 +67,32 @@ class Dropdown extends PureComponent {
     })
   }
 
+  onKeyPress = (e) => {
+    if (e.keyCode === 27) {
+      this.close()
+    }
+  }
+
   isOpen = () => this.state.open
 
-  hide = () => {
-    const { onHide } = this.props
+  close = () => {
+    const { onClose } = this.props
     this.setState({
       open: false,
     }, () => {
-      if (onHide) {
-        onHide()
+      if (onClose) {
+        onClose()
       }
     })
   }
 
-  show = () => {
-    const { onShow } = this.props
+  open = () => {
+    const { onOpen } = this.props
     this.setState({
       open: true,
     }, () => {
-      if (onShow) {
-        onShow()
+      if (onOpen) {
+        onOpen()
       }
     })
   }
@@ -94,9 +100,9 @@ class Dropdown extends PureComponent {
   toggle = () => {
     const { open } = this.state
     if (open) {
-      this.hide()
+      this.close()
     } else {
-      this.show()
+      this.open()
     }
   }
 
@@ -112,9 +118,14 @@ class Dropdown extends PureComponent {
         onClickOutside={this.onClickOutside}
         containerRef={containerRef}
         style={style}
+        onKeyDown={this.onKeyPress}
       >
-        <FixedContainer className="dropdown_container" active={open} onPositionChange={this.onPositionChange}>
-          {React.Children.map(children, child => React.cloneElement(child, { open, containerPosition }))}
+        <FixedContainer className="dropdown_container" active={open} onChange={this.onPositionChange}>
+          {React.Children.map(children, child =>
+            React.isValidElement(child) && typeof child.type !== 'string'
+              ? React.cloneElement(child, { open, containerPosition })
+              : child
+          )}
         </FixedContainer>
       </ClickOutside>
     )

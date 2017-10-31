@@ -17,23 +17,26 @@ class Checkbox extends PureComponent {
     value: PropTypes.any,
     size: PropTypes.string,
     loading: PropTypes.bool,
+    disabled: PropTypes.bool,
   }
 
   handleChange = (e) => {
     const { onChange } = this.props
     const value = e.currentTarget.value
     const checked = e.currentTarget.checked
+    e.currentTarget.focus()
     if (onChange) {
       onChange(checked, value, e)
     }
   }
 
   render() {
-    const { className, id, checked, hasError, label, size, loading, ...inputProps } = this.props
+    const { className, id, checked, hasError, label, size, loading, disabled, ...inputProps } = this.props
     const classes = cn('checkbox', {
       '-has-error': hasError,
       '-checked': checked,
       '-loading': loading,
+      '-disabled': disabled,
       [`-size-${size}`]: !!size,
     }, className)
     const props = merge(inputProps, {

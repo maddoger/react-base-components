@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
+import { merge, omit } from 'ramda'
 import { Link, NavLink } from 'react-router-dom'
 
 class ButtonBase extends Component {
@@ -9,6 +10,7 @@ class ButtonBase extends Component {
     className: PropTypes.string,
     activeClassName: PropTypes.string,
     active: PropTypes.bool,
+    autoFocus: PropTypes.bool,
     href: PropTypes.string,
     to: PropTypes.oneOfType([
       PropTypes.string,
@@ -22,6 +24,7 @@ class ButtonBase extends Component {
     type: PropTypes.string,
     role: PropTypes.string,
     tabIndex: PropTypes.number,
+    innerRef: PropTypes.func,
     // State
     disabled: PropTypes.bool,
     loading: PropTypes.bool,
@@ -38,6 +41,19 @@ class ButtonBase extends Component {
     onMouseLeave: PropTypes.func,
   }
 
+  componentDidMount() {
+    if (this.props.autoFocus && this.ref) {
+      this.ref.focus()
+    }
+  }
+
+  setRef = (ref) => {
+    this.ref = ref
+    if (this.props.innerRef) {
+      this.props.innerRef(ref)
+    }
+  }
+
   render() {
     const {
       component = 'button',
@@ -52,11 +68,10 @@ class ButtonBase extends Component {
       disabled,
       loading,
       hover,
-      ...rest
     } = this.props
 
     let Element = component
-    const props = {
+    const props = merge({
       className: cn({
         [className]: true,
         '-disabled': disabled,
@@ -66,8 +81,24 @@ class ButtonBase extends Component {
         [activeClassName]: activeClassName && active,
       }),
       children,
-      ...rest,
-    }
+      ref: this.setRef,
+    }, omit([
+      'className',
+      'component',
+      'children',
+      'active',
+      'activeClassName',
+      'to',
+      'href',
+      'type',
+      'role',
+      'disabled',
+      'loading',
+      'hover',
+      'autoFocus',
+      'innerRef',
+    ], this.props))
+
     if (href) {
       Element = 'a'
       props.href = href

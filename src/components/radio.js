@@ -13,6 +13,7 @@ class Radio extends PureComponent {
     name: PropTypes.string,
     onChange: PropTypes.func,
     value: PropTypes.any,
+    disabled: PropTypes.bool,
   }
 
   handleChange = (e) => {
@@ -25,10 +26,11 @@ class Radio extends PureComponent {
   }
 
   render() {
-    const { className, id, checked, hasError, label, ...inputProps } = this.props
+    const { className, id, checked, hasError, label, disabled, ...inputProps } = this.props
     const classes = cn('radio', {
       '-has-error': hasError,
       '-checked': checked,
+      '-disabled': disabled,
     }, className)
     const props = merge(inputProps, {
       type: 'radio',

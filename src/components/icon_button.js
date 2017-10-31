@@ -5,16 +5,18 @@ import ButtonBase from './button_base'
 import Icon from './icon'
 import Loader from './loader'
 
-const IconButton = ({ className, icon, width, height, iconClassName, loading, preset, ...rest }) => (
+const IconButton = ({ className, icon, width, height, iconClassName, loading, preset, children, ...rest }) => (
   <ButtonBase className={cn('icon-button', { [`-preset-${preset}`]: preset }, className)} loading={loading} {...rest}>
     <div className="icon-button_container">
       <Icon icon={icon} className={cn('icon-button_icon', iconClassName)} width={width} height={height} />
     </div>
-    {loading ? <Loader className="icon-button_loader " /> : null}
+    {children}
+    {loading && <Loader className="icon-button_loader" size="small" />}
   </ButtonBase>
 )
 
 IconButton.propTypes = {
+  children: PropTypes.node,
   className: PropTypes.string,
   icon: PropTypes.string,
   iconClassName: PropTypes.string,
@@ -24,6 +26,9 @@ IconButton.propTypes = {
   loading: PropTypes.bool,
   preset: PropTypes.string,
   title: PropTypes.string,
+  to: PropTypes.any,
+  href: PropTypes.string,
+  onClick: PropTypes.func,
 }
 
 export default IconButton

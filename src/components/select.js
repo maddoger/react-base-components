@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
-import ReactSelect from 'react-select'
-import { filter, merge, pluck } from 'ramda'
+import ReactSelect, { Creatable as ReactSelectCreatable } from 'react-select'
+import { filter, merge, pluck, omit } from 'ramda'
 
 import { t } from '../i18n'
 import Icon from './icon'
@@ -23,12 +23,15 @@ class Select extends PureComponent {
     renderOption: PropTypes.func,
     placeholder: PropTypes.string,
     multiple: PropTypes.bool,
+    allowCreate: PropTypes.bool,
     clearable: PropTypes.bool,
     searchable: PropTypes.bool,
     loading: PropTypes.bool,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
     inputRef: PropTypes.func,
+    promptTextCreator: PropTypes.func, // { label } => string
+    newOptionCreator: PropTypes.func,
   }
 
   static defaultProps = {
@@ -86,6 +89,7 @@ class Select extends PureComponent {
       hasError,
       size,
       multiple,
+      allowCreate,
       options,
       inputRef,
       ...rest
@@ -96,9 +100,9 @@ class Select extends PureComponent {
     } = this.state
 
     const searchable = this.props.searchable !== undefined ? Select.propTypes.searchable :
-      (options && options.length > 10)
+      (multiple || (options && options.length > 10))
 
-    const selectProps = merge(rest, {
+    const selectProps = merge({
       id,
       className: cn({
         '-disabled': disabled,
@@ -108,31 +112,29 @@ class Select extends PureComponent {
         [`-size-${size}`]: !!size,
         [className]: !!className,
       }),
-      arrowRenderer: this.renderArrow,
       onChange: this.handleChange,
       onFocus: this.handleFocus,
       onBlur: this.handleBlur,
       options,
       multi: multiple,
+      ref: inputRef,
       searchable,
       clearValueText: t('Clear'),
       clearAllText: t('Clear all'),
       noResultsText: t('No results found'),
       searchPromptText: t('Type to search'),
-      addLabelText: t('Add {label}?'),
+      addLabelText: t('Add {label}'),
       placeholder: t('Select...'),
       loadingPlaceholder: t('Loading...'),
-      ref: inputRef,
-    })
+      arrowRenderer: this.renderArrow,
+    }, omit(['id', 'onChange', 'onFocus', 'onBlur'], rest))
 
     const { value } = this.props
-    if (multiple && value) {
+    if (multiple && value && options) {
       selectProps.value = filter(item => (value.indexOf(item.value) > -1), options)
     }
 
-    return (
-      <ReactSelect {...selectProps} />
-    )
+    return allowCreate ? <ReactSelectCreatable {...selectProps} /> : <ReactSelect {...selectProps} />
   }
 }
 

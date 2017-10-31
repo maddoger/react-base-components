@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import cn from 'classnames'
 import { merge, propOr, omit } from 'ramda'
 import Textarea from 'react-textarea-autosize'
+import PhoneInput from './phone_input'
 import MaskedInput from './masked_input'
 
 class TextInput extends PureComponent {
@@ -51,8 +52,9 @@ class TextInput extends PureComponent {
 
   onChange = (e) => {
     const { onChange } = this.props
-    const value = e.currentTarget.value
+    const value = e.target.value
     if (onChange) {
+      e.persist()
       onChange(value, e)
     }
   }
@@ -63,6 +65,7 @@ class TextInput extends PureComponent {
     })
     const { onFocus } = this.props
     if (onFocus) {
+      e.persist()
       onFocus(e)
     }
   }
@@ -73,11 +76,13 @@ class TextInput extends PureComponent {
     })
     const { onBlur } = this.props
     if (onBlur) {
+      e.persist()
       onBlur(e)
     }
   }
 
   onKeyDown = (e) => {
+    e.persist()
     const { onPressEnter } = this.props
     if (onPressEnter && e.keyCode === 13) {
       onPressEnter(e)
@@ -111,10 +116,10 @@ class TextInput extends PureComponent {
       hasError,
       prefix,
       affix,
-      onPressEnter,
       size,
       multiline,
       mask,
+      type,
     } = this.props
     const {
       hasFocus,
@@ -133,8 +138,23 @@ class TextInput extends PureComponent {
     }
     const inputProps = merge(
       omit(
-        ['className', 'inputClassName', 'inputRef', 'hasError', 'multiline', 'ref',
-          'prefix', 'affix', 'size', 'autoFocus', 'onChange', 'onFocus', 'onBlur', 'onKeyDown', 'onPressEnter'],
+        [
+          'affix',
+          'autoCompleteProps',
+          'autoFocus',
+          'className',
+          'hasError',
+          'inputClassName',
+          'inputRef',
+          'multiline',
+          'onBlur',
+          'onChange',
+          'onFocus',
+          'onKeyDown',
+          'onPressEnter',
+          'prefix',
+          'size',
+        ],
         this.props
       ),
       {
@@ -161,7 +181,12 @@ class TextInput extends PureComponent {
       delete inputProps.type
       delete inputProps.ref
       inputProps.inputRef = this.setInputRef
+    } else if (type === 'tel') {
+      InputElement = PhoneInput
+      delete inputProps.ref
+      inputProps.inputRef = this.setInputRef
     }
+
     return (
       <div {...containerProps}>
         <div className="text-input_container">
