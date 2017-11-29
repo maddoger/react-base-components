@@ -71,8 +71,8 @@ class FixedContainer extends PureComponent {
         left: rect.left,
         width: rect.width,
         height: rect.height,
-        fromRight: window.innerWidth - rect.right,
-        fromBottom: window.innerHeight - rect.bottom,
+        fromRight: document.documentElement.clientWidth - rect.right,
+        fromBottom: document.documentElement.clientHeight - rect.bottom,
       }
       if (force || !equals(contentRect, this.contentRect)) {
         this.contentRect = contentRect

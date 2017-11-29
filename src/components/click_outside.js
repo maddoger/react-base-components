@@ -101,10 +101,12 @@ class ClickOutside extends PureComponent {
 
   addEventListener() {
     document.addEventListener('mousedown', this.handleClickOutside, true)
+    document.addEventListener('touchstart', this.handleClickOutside, true)
   }
 
   removeEventListener() {
     document.removeEventListener('mousedown', this.handleClickOutside, true)
+    document.removeEventListener('touchstart', this.handleClickOutside, true)
   }
 
   render() {

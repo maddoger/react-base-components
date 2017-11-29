@@ -1,12 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { omit, merge, is } from 'ramda'
+import { is, mergeAll, omit } from 'ramda'
 
-import FormGroup from './form_group'
-import TextInput from './text_input'
-import Select from './select'
-import Checkbox from './checkbox'
-import Toggle from './toggle'
+import FormGroup from './FormGroup'
+import TextInput from './TextInput'
+import Select from './Select'
+import Checkbox from './Checkbox'
+import Toggle from './Toggle'
 
 const FormField = (props) => {
   const formGroupProps = {
@@ -19,18 +19,22 @@ const FormField = (props) => {
     className: props.className,
     size: props.size,
   }
-  const controlProps = merge({
-    className: props.controlClassName,
-    hasError: !!props.error,
-  }, omit([
-    'controlClassName',
-    'controlProps',
-    'control',
-    'label',
-    'error',
-    'hint',
-    'className',
-  ], props), props.controlProps)
+  const controlProps = mergeAll([
+    {
+      className: props.controlClassName,
+      hasError: !!props.error,
+    },
+    omit([
+      'controlClassName',
+      'controlProps',
+      'control',
+      'label',
+      'error',
+      'hint',
+      'className',
+    ], props),
+    props.controlProps,
+  ])
   let Control = TextInput
 
   if (props.control) {
@@ -61,7 +65,6 @@ const FormField = (props) => {
 
 FormField.propTypes = {
   className: PropTypes.string,
-  defaultValue: PropTypes.string,
   disabled: PropTypes.bool,
   error: PropTypes.oneOfType([PropTypes.array, PropTypes.node, PropTypes.bool]),
   hint: PropTypes.node,
@@ -74,6 +77,7 @@ FormField.propTypes = {
   size: PropTypes.string,
   type: PropTypes.string,
   value: PropTypes.any,
+  defaultValue: PropTypes.any,
   control: PropTypes.oneOfType([PropTypes.string, PropTypes.element, PropTypes.func]),
   controlClassName: PropTypes.string,
   controlProps: PropTypes.object,

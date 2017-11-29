@@ -9,12 +9,13 @@ class DropdownContent extends PureComponent {
     children: PropTypes.node,
     open: PropTypes.bool,
     containerPosition: PropTypes.object,
-    triangle: PropTypes.oneOf(['bottom']),
+    triangle: PropTypes.arrayOf(PropTypes.oneOf(['top', 'bottom', 'top-left', 'top-right'])),
     position: PropTypes.arrayOf(PropTypes.oneOf([
       'downFromTop', 'downFromBottom',
       'upFromTop', 'upFromBottom',
       'leftFromLeft', 'leftFromRight',
       'rightFromLeft', 'rightFromRight',
+      'leftFromCenter', 'rightFromCenter',
       'fullWidth', 'autoVertical',
     ])),
   }
@@ -66,6 +67,12 @@ class DropdownContent extends PureComponent {
           case 'rightFromRight':
             style.left = (containerPosition.left + containerPosition.width) + 'px'
             break
+          case 'leftFromCenter':
+            style.right = (containerPosition.fromRight + containerPosition.width / 2) + 'px'
+            break
+          case 'rightFromCenter':
+            style.left = (containerPosition.left + containerPosition.width / 2) + 'px'
+            break
           case 'fullWidth':
             style.left = (containerPosition.left) + 'px'
             style.minWidth = containerPosition.width + 'px'
@@ -99,4 +106,3 @@ class DropdownContent extends PureComponent {
 }
 
 export default DropdownContent
-
