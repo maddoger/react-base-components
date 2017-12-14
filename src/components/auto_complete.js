@@ -9,6 +9,7 @@ import DropdownContent from './dropdown_content'
 import DropdownLink from './dropdown_link'
 import Icon from './icon'
 import LoadingContainer from './loading_container'
+import ClickOutside from './click_outside'
 
 class AutoComplete extends PureComponent {
   static propTypes = {
@@ -26,11 +27,13 @@ class AutoComplete extends PureComponent {
     onKeyDown: PropTypes.func,
     size: PropTypes.string,
     clearOnClose: PropTypes.bool,
+    closeOnSelect: PropTypes.bool,
   }
 
   static defaultProps = {
     inputProps: {},
     items: [],
+    closeOnSelect: true,
   }
 
   constructor(props, context) {
@@ -67,7 +70,6 @@ class AutoComplete extends PureComponent {
   }
 
   onBlur = (e) => {
-    this.close()
     const { onBlur } = this.props
     if (onBlur) {
       e.persist()
@@ -121,15 +123,15 @@ class AutoComplete extends PureComponent {
   }
 
   onSelect = (index) => {
-    const { items, onChange, onSelect } = this.props
+    const { items, onChange, onSelect, closeOnSelect } = this.props
     if (index !== -1) {
       const value = this.getItemValue(items[index])
-      if (onSelect) {
-        if (!onSelect(value, items[index])) {
-          return
-        }
+      if (onSelect && onSelect(value, items[index])) {
+        onChange(value)
       }
-      onChange(value)
+    }
+    if (closeOnSelect) {
+      this.close()
     }
   }
 
@@ -218,10 +220,10 @@ class AutoComplete extends PureComponent {
   render() {
     const { className, size } = this.props
     return (
-      <div className={cn('auto-complete', size && `-size-${size}`, className)}>
+      <ClickOutside className={cn('auto-complete', size && `-size-${size}`, className)} onClickOutside={this.close}>
         {this.renderInput()}
         {this.renderDropdown()}
-      </div>
+      </ClickOutside>
     )
   }
 }
